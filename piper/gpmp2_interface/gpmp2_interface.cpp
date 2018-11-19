@@ -147,5 +147,14 @@ int main(int argc, char** argv)
   ros::Subscriber main_sub = n.subscribe("/piper/run_main", 1, mainCallback);
   main_pub.publish(std_msgs::Bool());
 
-  spinner.spin();
+
+  // ros::NodeHandle n;
+  // ros::Publisher main_pub = n.advertise<std_msgs::Bool>("/piper/run_main", 1);
+  // ros::Rate loop_rate(10);
+  // while (ros::ok()){
+  //   ros::spinOnce();
+  //   loop_rate.sleep();
+  // }
+
+  return 0;
 }

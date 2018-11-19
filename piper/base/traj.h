@@ -31,13 +31,13 @@ namespace piper {
 class Traj
 {
   public:
-    typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> TrajClient;
-    ros::Publisher est_traj_pub, plan_traj_pub;
+    // typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> TrajClient;
+    ros::Publisher cmd_traj_pub, est_traj_pub, plan_traj_pub;
     std::vector<std::string> arm_joint_names;
 
   private:
     std::string trajectory_control_topic_, est_traj_pub_topic_, plan_traj_pub_topic_;
-    TrajClient* traj_client_;
+    // TrajClient* traj_client_;
     control_msgs::FollowJointTrajectoryGoal traj_;
 
   public:

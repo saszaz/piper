@@ -32,20 +32,26 @@ Traj::Traj(ros::NodeHandle nh)
   }
 
   // trajectory action client
+  // if (nh.hasParam("robot/trajectory_control_topic"))
+  // {
+  //   nh.getParam("robot/trajectory_control_topic", trajectory_control_topic_);
+  //   traj_client_ = new Traj::TrajClient(trajectory_control_topic_, true);
+  //   if (!traj_client_->waitForServer(ros::Duration(5.0)))
+  //   {
+  //     ROS_INFO("Waiting for trajectory_control server...");
+  //     if (!traj_client_->waitForServer(ros::Duration(5.0)))
+  //     {
+  //       ROS_ERROR("Cannot find trajectory_control server \'%s\'", trajectory_control_topic_.c_str());
+  //       sigintHandler(0);
+  //     }
+  //   }
+  // }
   if (nh.hasParam("robot/trajectory_control_topic"))
   {
     nh.getParam("robot/trajectory_control_topic", trajectory_control_topic_);
-    traj_client_ = new Traj::TrajClient(trajectory_control_topic_, true);
-    if (!traj_client_->waitForServer(ros::Duration(5.0)))
-    {
-      ROS_INFO("Waiting for trajectory_control server...");
-      if (!traj_client_->waitForServer(ros::Duration(5.0)))
-      {
-        ROS_ERROR("Cannot find trajectory_control server \'%s\'", trajectory_control_topic_.c_str());
-        sigintHandler(0);
-      }
-    }
+    cmd_traj_pub = nh.advertise<trajectory_msgs::JointTrajectory>(trajectory_control_topic_, 1);
   }
+
   else
     ROS_WARN("No trajectory control topic. Trajectory will not be executed.");
 }
@@ -133,8 +139,9 @@ void Traj::executeTrajectory(gtsam::Values& exec_values, Problem& problem, size_
   traj_.trajectory.header.stamp = ros::Time::now();
     
   // dispatch ros trajectory
-  traj_client_->sendGoal(traj_);
-  traj_client_->waitForResult();
+  // traj_client_->sendGoal(traj_);
+  // traj_client_->waitForResult();
+  cmd_traj_pub.publish(traj_.trajectory);
 }
 
 /* ************************************************************************** */
