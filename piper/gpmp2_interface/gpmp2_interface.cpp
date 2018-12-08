@@ -138,7 +138,7 @@ void mainCallback(const std_msgs::Bool::ConstPtr& msg)
 /* main function */
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "gpmp2_interface");
+  ros::init(argc, argv, "gpmp2_interface", ros::init_options::NoSigintHandler);
   signal(SIGINT, piper::sigintHandler);
   ros::MultiThreadedSpinner spinner(0);
 
@@ -147,14 +147,7 @@ int main(int argc, char** argv)
   ros::Subscriber main_sub = n.subscribe("/piper/run_main", 1, mainCallback);
   main_pub.publish(std_msgs::Bool());
 
-
-  // ros::NodeHandle n;
-  // ros::Publisher main_pub = n.advertise<std_msgs::Bool>("/piper/run_main", 1);
-  // ros::Rate loop_rate(10);
-  // while (ros::ok()){
-  //   ros::spinOnce();
-  //   loop_rate.sleep();
-  // }
-
+  spinner.spin();
+  
   return 0;
 }
