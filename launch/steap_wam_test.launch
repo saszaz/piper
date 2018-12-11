@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="robot" default="wam" />
+  <arg name="problem" default="wam_test" />
+
+  <node name="steap_interface" pkg="piper" type="steap_interface" output="screen" />
+
+  <rosparam command="load" file="$(find piper)/config/$(arg robot).yaml" />
+  <rosparam command="load" file="$(find piper)/problem/$(arg problem).yaml" />
+</launch>

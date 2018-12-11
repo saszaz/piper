@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   geometry_msgs
   trajectory_msgs
+  wam_common
 )
 
 # C++11 flags for GTSAM 4.0

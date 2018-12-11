@@ -1,21 +1,14 @@
 piper:
 
-  ## FIX: Move to start position without gpmp2 ##
-
-  ## TEMP: Uncomment "Start Pos." or "Goal Pos." depending on which to move to. 
-  #*** DO NOT Uncomment both ! *** 
-  
-#********************************************************************************#
-
   ### Start Pos. ###
-  goal_conf: [-0.174983, -1.91256, 1.47136, 1.23434, 0.300391, 1.13839, -1.61063]
+  start_conf: [-0.174983, -1.91256, 1.47136, 1.23434, 0.300391, 1.13839, -1.61063]
 
   ### Goal Pos.###
+  goal_conf: [-0.174983, -1.91256, 2.5, 1.23434, 0.300391, 1.13839, -1.61063]
   # goal_conf: [-1.24691, -1.90477, 1.45735, 1.19335, 0.311619, 0.400021, -1.65183]
 
-
   sdf_file: sdf/empty_sdf.bin
-  total_time: 10.0
+  total_time: 30
   total_step: 10
   obs_check_inter: 5
   control_inter: 5

@@ -17,4 +17,6 @@ piper:
     trajectory_control_topic: /wam/joint_traj_cmd
     est_traj_pub_topic: /piper/est_traj
     plan_traj_pub_topic: /piper/plan_traj
+    joint_move_service: /wam/joint_move 
     arm_state_topic: /wam/joint_states
+

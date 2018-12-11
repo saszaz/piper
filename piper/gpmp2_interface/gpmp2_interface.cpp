@@ -7,6 +7,10 @@
 
 #include <gpmp2_interface.h>
 
+#include <ctime>
+#include <chrono>
+
+using namespace std::chrono;
 
 namespace piper {
 
@@ -41,6 +45,7 @@ GPMP2Interface::GPMP2Interface(ros::NodeHandle nh)
     if (problem_.robot.isThetaNeg())
       problem_.robot.negateTheta(problem_.start_conf);
   }
+  
   if (problem_.robot.isMobileBase())
   {
     if (!nh.hasParam("start_pose"))
@@ -55,7 +60,7 @@ GPMP2Interface::GPMP2Interface(ros::NodeHandle nh)
   ROS_INFO("Optimizing...");
   int DOF = problem_.robot.getDOF();
   if (!problem_.robot.isMobileBase())
-    batch_values_ = gpmp2::BatchTrajOptimize3DArm(problem_.robot.arm, problem_.sdf, problem_.start_conf, 
+  batch_values_ = gpmp2::BatchTrajOptimize3DArm(problem_.robot.arm, problem_.sdf, problem_.start_conf, 
       gtsam::Vector::Zero(DOF), problem_.goal_conf, gtsam::Vector::Zero(DOF), init_values_, problem_.opt_setting);
   else
     batch_values_ = gpmp2::BatchTrajOptimizePose2MobileArm(problem_.robot.marm, problem_.sdf, problem_.pstart, 
