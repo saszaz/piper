@@ -25,6 +25,7 @@ STEAPInterface::STEAPInterface(ros::NodeHandle nh)
     arm_pos_ = gtsam::Vector::Zero(problem_.robot.getDOFarm());
     arm_pos_time_ = ros::Time::now();
   }
+
   // robot joint-move client (for start position only)
   nh.getParam("robot/joint_move_service", joint_move_service_);
   joint_move_client_= nh.serviceClient<wam_common::JointMove>(joint_move_service_);
@@ -98,29 +99,31 @@ void STEAPInterface::execute()
     exec_values_ = gpmp2::interpolateArmTraj(inc_inf_values_, problem_.opt_setting.Qc_model, problem_.delta_t, 
         problem_.control_inter, step, step+1);
     coll_cost = gpmp2::CollisionCost3DArm(problem_.robot.arm, problem_.sdf, exec_values_, problem_.opt_setting);
-    
-    
+        
     if (coll_cost != 0)
     {
       ROS_FATAL_STREAM("At step = "<<step<<", plan is not collision free! Collision cost = "<<coll_cost);
       sigintHandler(0);
     }
 
+    ROS_INFO("\n");
+    ROS_INFO("Time now: %15.5f",ros::Time::now().toSec());
 
     // execute trajectory
     ROS_INFO_STREAM("Executing trajectory for step: "<< step << 
-      ". Time = "<< (ros::Time::now()-time_start).toSec() << " sec");
+      ". Meas-Plan time = "<< (ros::Time::now()-arm_pos_time_).toSec() << " sec");
 
     exec_step = problem_.control_inter + 2;
-    traj_.executeTrajectory(exec_values_, problem_, exec_step);
+    traj_.executeTrajectory(exec_values_, problem_, exec_step, arm_pos_time_ );
     
     // Hold until next timestep
-    while ( (ros::Time::now()-time_start).toSec() < (step+1)*problem_.delta_t ) {}
+    while ( (ros::Time::now()-time_start).toSec() < (step+1)*problem_.delta_t) {}
+    // ros::Duration(0.5).sleep();
 
     // get current state and use if it was measured recently then
     // update factor graph to perform incremental inference
-    if ((ros::Time::now() - arm_pos_time_).toSec() < 5)
-    {
+    // if ((ros::Time::now() - arm_pos_time_).toSec() < 5)
+    // {
       conf = arm_pos_;  
       if (problem_.robot.isThetaNeg())
         problem_.robot.negateTheta(conf);
@@ -128,14 +131,14 @@ void STEAPInterface::execute()
       arm_inc_inf_.addPoseEstimate(step+1, conf, sensor_model);
       arm_inc_inf_.update();
       inc_inf_values_ = arm_inc_inf_.values();
-    }
+    // }
     
 
     // publish trajectory for visualization or other use
-    if (traj_.est_traj_pub)
-      traj_.publishEstimatedTrajectory(inc_inf_values_, problem_, step+1);
-    if (traj_.plan_traj_pub)
-      traj_.publishPlannedTrajectory(inc_inf_values_, problem_, step+1);
+    // if (traj_.est_traj_pub)
+    //   traj_.publishEstimatedTrajectory(inc_inf_values_, problem_, step+1);
+    // if (traj_.plan_traj_pub)
+    //   traj_.publishPlannedTrajectory(inc_inf_values_, problem_, step+1);
   }
 }
 

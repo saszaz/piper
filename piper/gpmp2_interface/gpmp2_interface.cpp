@@ -29,13 +29,12 @@ GPMP2Interface::GPMP2Interface(ros::NodeHandle nh)
     arm_pos_ = gtsam::Vector::Zero(problem_.robot.getDOFarm());
     arm_pos_time_ = ros::Time::now();
   }
-  if (problem_.robot.isMobileBase() && nh.hasParam("robot/base_state_topic"))
-  {
-    nh.getParam("robot/base_state_topic", base_state_topic_);
-    base_state_sub_ = nh.subscribe(base_state_topic_, 1, &GPMP2Interface::baseStateCallback, this);
-    base_pos_ = gtsam::Pose2();
-    base_pos_time_ = ros::Time::now();
-  }
+
+  // robot joint-move client (for start position only)
+  nh.getParam("robot/joint_move_service", joint_move_service_);
+  joint_move_client_= nh.serviceClient<wam_common::JointMove>(joint_move_service_);
+
+
   ros::Duration(1.0).sleep();
 
   // get start from measurement if not passed as param
@@ -45,12 +44,13 @@ GPMP2Interface::GPMP2Interface(ros::NodeHandle nh)
     if (problem_.robot.isThetaNeg())
       problem_.robot.negateTheta(problem_.start_conf);
   }
-  
-  if (problem_.robot.isMobileBase())
+
+  // move to trajectory start
+  if (nh.getParam("start_conf", start_conf_))
   {
-    if (!nh.hasParam("start_pose"))
-      problem_.start_pose = base_pos_;
-    problem_.pstart = gpmp2::Pose2Vector(problem_.start_pose, problem_.start_conf);
+    joint_move_srv_.request.joints = start_conf_;
+    ROS_INFO("Moving to start position.");
+    joint_move_client_.call(joint_move_srv_);
   }
   
   // initialize trajectory
@@ -59,12 +59,10 @@ GPMP2Interface::GPMP2Interface(ros::NodeHandle nh)
   // solve with batch gpmp2
   ROS_INFO("Optimizing...");
   int DOF = problem_.robot.getDOF();
-  if (!problem_.robot.isMobileBase())
+
   batch_values_ = gpmp2::BatchTrajOptimize3DArm(problem_.robot.arm, problem_.sdf, problem_.start_conf, 
       gtsam::Vector::Zero(DOF), problem_.goal_conf, gtsam::Vector::Zero(DOF), init_values_, problem_.opt_setting);
-  else
-    batch_values_ = gpmp2::BatchTrajOptimizePose2MobileArm(problem_.robot.marm, problem_.sdf, problem_.pstart, 
-      gtsam::Vector::Zero(DOF), problem_.pgoal, gtsam::Vector::Zero(DOF), init_values_, problem_.opt_setting);
+  
   ROS_INFO("Batch GPMP2 optimization complete.");
 
   // publish trajectory for visualization or other use
@@ -80,18 +78,11 @@ void GPMP2Interface::execute()
 
   // interpolate batch solution to a desired resolution for control and check for collision
   ROS_INFO("Checking for collision.");
-  if (!problem_.robot.isMobileBase())
-  {
-    exec_values_ = gpmp2::interpolateArmTraj(batch_values_, problem_.opt_setting.Qc_model, problem_.delta_t, 
-      problem_.control_inter, 0, problem_.total_step-1);
-    coll_cost = gpmp2::CollisionCost3DArm(problem_.robot.arm, problem_.sdf, exec_values_, problem_.opt_setting);
-  }
-  else
-  {
-    exec_values_ = gpmp2::interpolatePose2MobileArmTraj(batch_values_, problem_.opt_setting.Qc_model, 
-      problem_.delta_t, problem_.control_inter, 0, problem_.total_step-1);
-    coll_cost = gpmp2::CollisionCostPose2MobileArm(problem_.robot.marm, problem_.sdf, exec_values_, problem_.opt_setting);
-  }
+
+  exec_values_ = gpmp2::interpolateArmTraj(batch_values_, problem_.opt_setting.Qc_model, problem_.delta_t, 
+    problem_.control_inter, 0, problem_.total_step-1);
+  coll_cost = gpmp2::CollisionCost3DArm(problem_.robot.arm, problem_.sdf, exec_values_, problem_.opt_setting);
+
   if (coll_cost != 0)
   {
     ROS_FATAL("Plan is not collision free! Collision cost = %.3f", coll_cost);
@@ -101,7 +92,7 @@ void GPMP2Interface::execute()
   //  execute trajectory
   ROS_INFO("Executing GPMP2 planned trajectory open-loop...");
   exec_step = problem_.total_step+problem_.control_inter*(problem_.total_step-1);
-  traj_.executeTrajectory(exec_values_, problem_, exec_step);
+  traj_.executeTrajectory(exec_values_, problem_, exec_step, arm_pos_time_);
 }
 
 /* ************************************************************************** */

@@ -69,7 +69,7 @@ class Traj
      *  @param problem all problem params and settings
      *  @param exec_step number of points on the trajectory
      **/
-    void executeTrajectory(gtsam::Values& exec_values, Problem& problem, size_t exec_step);
+    void executeTrajectory(gtsam::Values& exec_values, Problem& problem, size_t exec_step, ros::Time& plan_start_time);
 
     /**
      *  publish estimated trajectory

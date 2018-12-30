@@ -24,6 +24,8 @@
 #include <traj.h>
 #include <misc.h>
 
+#include <wam_common/JointMove.h>
+
 
 namespace piper {
 
@@ -36,6 +38,10 @@ class GPMP2Interface
 
     std::string arm_state_topic_, base_state_topic_;
     ros::Subscriber arm_state_sub_, base_state_sub_;
+    std::string joint_move_service_;
+    ros::ServiceClient joint_move_client_;
+    std::vector<float> start_conf_;
+    wam_common::JointMove joint_move_srv_;
     gtsam::Vector arm_pos_;
     gtsam::Pose2 base_pos_;
     ros::Time arm_pos_time_, base_pos_time_;

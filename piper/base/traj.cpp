@@ -92,7 +92,7 @@ void Traj::initializeTrajectory(gtsam::Values& init_values, Problem& problem)
 }
 
 /* ************************************************************************** */
-void Traj::executeTrajectory(gtsam::Values& exec_values, Problem& problem, size_t exec_step)
+void Traj::executeTrajectory(gtsam::Values& exec_values, Problem& problem, size_t exec_step, ros::Time& plan_start_time)
 {
   gtsam::Pose2 pose;
   gtsam::Vector conf, vel;
@@ -136,7 +136,11 @@ void Traj::executeTrajectory(gtsam::Values& exec_values, Problem& problem, size_
     }
     traj_.trajectory.points[i].time_from_start = ros::Duration(i*problem.delta_t/(problem.control_inter+1));
   }
-  traj_.trajectory.header.stamp = ros::Time::now();
+
+  // Send target planning start time as stamp
+  traj_.trajectory.header.stamp = plan_start_time;
+ // traj_.trajectory.header.stamp = ros::Time::now();
+
     
   // dispatch ros trajectory
   // traj_client_->sendGoal(traj_);
